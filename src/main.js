@@ -50,7 +50,7 @@ shell.on('gl-init', () => {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-  camera = new Camera();
+  camera = new Camera(0, 10, 170);
 
   touches()
     .on('start', (ev, pos) => {
