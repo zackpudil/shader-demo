@@ -34,6 +34,8 @@ export default class Shader {
     let loc = this.gl.getUniformLocation(this.program, name);
     if(value.type === "mat4")
       this.gl.uniformMatrix4fv(loc, false, value.val);
+    if(value.type === "mat3")
+      this.gl.uniformMatrix3fv(loc, false, value.val);
     else if(value.type === "vec3")
       this.gl.uniform3fv(loc, value.val);
     else if(value.type === "vec2")

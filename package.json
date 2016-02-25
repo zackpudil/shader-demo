@@ -20,6 +20,8 @@
     "gl-matrix": "^2.3.1",
     "gl-now": "^1.4.0",
     "gl-texture2d": "^2.0.10",
+    "key-pressed": "0.0.1",
+    "mouse-wheel": "^1.1.0",
     "touches": "^1.2.0"
   }
 }
