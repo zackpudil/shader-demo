@@ -63,11 +63,12 @@ vec4 scene(vec3 p) {
   p.z = -abs(p.z) + 0.8;
   p.y -= 1.45;
   vec4 wall = vec4(box2(p.yz, vec2(1.4, 0.05)), color);
-  p.yz -= vec2(1.8, 0.45);
 
+  p.yz -= vec2(1.8, 0.45);
   vec4 roof = vec4(box2(rotateX(p, 45.0).yz, vec2(0.05, 0.7)), color);
-  vec4 building = opU(roof, wall);
   p.yz += vec2(1.8, 0.45);
+
+  vec4 building = opU(roof, wall);
 
   p.x = mod(p.x + 1.0, 2.0) - 1.0;
   p.x = abs(p.x) - 0.25;
@@ -153,7 +154,7 @@ vec4 raymarch(vec3 rayOrigin, vec3 rayDirection) {
     m = s.yzw;
   }
 
-  if(t > 10.0) m = vec3(-1.0);
+  if(t > 50.0) m = vec3(-1.0);
   return vec4(t, m);
 }
 
