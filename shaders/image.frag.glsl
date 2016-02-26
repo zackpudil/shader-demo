@@ -43,14 +43,37 @@ float cylinder(vec3 p, vec2 h) {
     return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
 }
 
-vec4 opU(vec4 a, vec4 b) {
+vec4 unionz(vec4 a, vec4 b) {
   float d = min(a.x, b.x);
   return vec4(d, d == a.x ? a.yzw : b.yzw);
 }
 
-vec4 opS(vec4 a, vec4 b) {
+vec4 compliment(vec4 a, vec4 b) {
   float d = max(-a.x, b.x);
   return vec4(d, d == a.x ? a.yzw : b.yzw);
+}
+
+// Domain operations
+void rep(inout float p, float o) {
+  p = mod(p + o, o*2.0) - o;
+}
+
+void mirrorLeft(inout float p, float o) {
+  p = abs(p) - o;
+}
+
+void mirrorLeft(inout vec2 p, vec2 o) {
+  p = abs(p) - o;
+  if(p.y > p.x) p.xy = p.yx;
+}
+
+void mirrorRight(inout float p, float o) {
+  p = -abs(p) + o;
+}
+
+void mirrorRight(inout vec2 p, vec2 o) {
+  p = -abs(p) + o;
+  if(p.y > p.x) p.xy = p.yx;
 }
 
 vec4 scene(vec3 p) {
@@ -60,27 +83,29 @@ vec4 scene(vec3 p) {
     plane(p, vec4(0, 1, 0, 0)),
     vec3(0.5)*mod(floor(p.z) + floor(p.x), 2.0));
 
-  p.z = -abs(p.z) + 0.8;
   p.y -= 1.45;
+  mirrorRight(p.xz, vec2(2, 2));
+  mirrorRight(p.xz, vec2(2, 3));
+  mirrorRight(p.z, 0.8);
   vec4 wall = vec4(box2(p.yz, vec2(1.4, 0.05)), color);
 
   p.yz -= vec2(1.8, 0.45);
   vec4 roof = vec4(box2(rotateX(p, 45.0).yz, vec2(0.05, 0.7)), color);
   p.yz += vec2(1.8, 0.45);
 
-  vec4 building = opU(roof, wall);
+  vec4 building = unionz(roof, wall);
 
-  p.x = mod(p.x + 1.0, 2.0) - 1.0;
-  p.x = abs(p.x) - 0.25;
-  p.x = abs(p.x) + 0.1;
+  rep(p.x, 1.0);
+  mirrorLeft(p.x, 0.35);
+  mirrorLeft(p.x, -0.1);
   vec4 boxDI = vec4(box(p, vec3(0.3, 0.9, 0.1)), color);
   p.y -= 0.9;
   vec4 cylinderDI = vec4(cylinder(p.xzy, vec2(0.3, 0.1)), color);
 
-  vec4 windows = opU(boxDI, cylinderDI);
-  building = opS(windows, building);
+  vec4 windows = unionz(boxDI, cylinderDI);
+  building = compliment(windows, building);
 
-  return opU(planeDI, building);
+  return unionz(planeDI, building);
 }
 
 vec3 getNormal(vec3 p) {
@@ -172,7 +197,7 @@ void tryImage(out vec4 fragColor, in vec2 fragCoord) {
   if(render.y > -1.0) {
     vec3 pos = ro + render.x*rd;
     vec3 normal = getNormal(pos);
-    vec4 shading = getShading(pos, normal, vec3(30, 10.0, -30));
+    vec4 shading = getShading(pos, normal, vec3(0, 5.0, 0));
     float ao = ambientOcclusion(pos, normal);
 
     fragColor = vec4(pow(render.yzw, vec3(0.474)), 1)*shading*(1.0 - ao);

@@ -79,7 +79,7 @@ shell.on('gl-init', () => {
 });
 
 let globalTime = 0;
-let speed = 0.025;
+let speed = 0.075;
 
 shell.on('gl-render', (t) => {
   let gl = shell.gl;
