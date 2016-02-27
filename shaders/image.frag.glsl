@@ -51,6 +51,10 @@ void rep(inout float p, float o) {
   p = mod(p + o, o*2.0) - o;
 }
 
+void rep(inout vec2 p, vec2 o) {
+  p = mod(p + o, o*2.0) - o;
+}
+
 void mirrorLeft(inout float p, float o) {
   p = abs(p) - o;
 }
@@ -85,12 +89,9 @@ vec4 scene(vec3 p) {
     plane(p, vec4(0, 1, 0, 0)),
     vec3(0.5)*mod(floor(p.z) + floor(p.x), 2.0));
 
-
   p.y -= 1.45;
-  mirrorLeft(p.xz, vec2(5.0, 5.0));
 
   vec4 sphereDI = vec4(sphere(p + vec3(0, 0, 0), 0.6), vec3(1, 0, 0));
-
   mirrorRight(p.xz, vec2(4, 5));
   mirrorRight(p.z, 0.8);
   vec4 wall = vec4(box2(p.yz, vec2(1.4, 0.05)), color);
@@ -114,7 +115,9 @@ vec4 scene(vec3 p) {
   building = compliment(windows, building);
   building = unionz(building, sphereDI);
 
-  return unionz(planeDI, building);
+  vec4 scene = unionz(planeDI, building);
+
+  return scene;
 }
 
 vec3 getNormal(vec3 p) {
@@ -206,7 +209,7 @@ void tryImage(out vec4 fragColor, in vec2 fragCoord) {
   if(render.y > -1.0) {
     vec3 pos = ro + render.x*rd;
     vec3 normal = getNormal(pos);
-    vec4 shading = getShading(pos, normal, vec3(-10, 5.0, 0));
+    vec4 shading = getShading(pos, normal, vec3(0, 5.0, 0));
     float ao = ambientOcclusion(pos, normal);
 
     fragColor = vec4(pow(render.yzw, vec3(0.474)), 1)*shading*(1.0 - ao);
