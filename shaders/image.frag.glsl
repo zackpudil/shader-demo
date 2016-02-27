@@ -82,7 +82,7 @@ vec4 scene(vec3 p) {
   // mirrorLeft(p.xz, vec2(5, 5));
   vec4 sphereDI = vec4(sphere(p + vec3(0, 0, 0), 0.6), vec3(1, 0, 0));
   mirrorRight(p.xz, vec2(5, 5));
-  // mirrorRight(p.z, 1.5);
+  mirrorRight(p.z, 1.5);
   vec4 wall = vec4(box2(p.yz, vec2(1.4, 0.05)), color);
 
   p.yz -= vec2(2.3, 1.05);
@@ -125,19 +125,16 @@ vec3 getNormal(vec3 p) {
 
 float getShadow(vec3 p0, vec3 p1, float k) {
   vec3 rd = normalize(p1 - p0);
-  float t = 10.0 * 0.0002;
-  float maxt = length(p1 - p0);
   float f = 1.0;
+  float t = 10.0*0.0002;
+  float tmax = length(p1 - p0);
 
-  for(int i = 0; i < 64; i++) {
+  for(int i = 0; i < 100; i++) {
     float d = scene(p0 + rd*t).x;
-
     if(d < 0.0002) return 0.0;
-
     f = min(f, k*d/t);
     t += d;
-
-    if(t >= maxt) break;
+    if(t >= tmax) break;
   }
 
   return f;
@@ -157,9 +154,9 @@ float ambientOcclusion(vec3 p, vec3 n) {
   return clamp(oc, 0.0, 1.0);
 }
 
-vec4 getShading(vec3 p, vec3 n, vec3 l) {
+vec3 getShading(vec3 p, vec3 n, vec3 l) {
   float ints = 0.0;
-  float shadow = getShadow(p, l, 1.0);
+  float shadow = getShadow(p, l, 1.5);
   float ao = ambientOcclusion(p, n);
 
   if(shadow > 0.0) {
@@ -167,7 +164,7 @@ vec4 getShading(vec3 p, vec3 n, vec3 l) {
     ints = clamp(dot(n, lightDir), 0.0, 1.0);
   }
 
-  return vec4(1.0)*ints + vec4(vec3(0.4), 1.0)*(1.0 - ints)*(1.0 - ao);
+  return vec3(1.0)*ints + vec3(0.4)*(1.0 - ints)*(1.0 - ao);
 }
 
 vec4 raymarch(vec3 rayOrigin, vec3 rayDirection) {
@@ -200,10 +197,10 @@ void tryImage(out vec4 fragColor, in vec2 fragCoord) {
   if(render.y > -1.0) {
     vec3 pos = ro + render.x*rd;
     vec3 normal = getNormal(pos);
-    vec4 shading =
-      getShading(pos, normal, vec3(30.0*cos(time/10.0), 15, 30.0*sin(time/10.0)));
+    vec3 shading =
+      getShading(pos, normal, vec3(0, 15, 0));
 
-    fragColor = vec4(pow(render.yzw, vec3(0.474)), 1)*shading;
+    fragColor = vec4(pow(render.yzw*shading, vec3(0.474)), 1);
   } else {
     fragColor = vec4(vec3(0.25), 1.0);
   }
