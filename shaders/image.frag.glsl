@@ -6,20 +6,12 @@ float mapTo(float x, float minx, float maxx, float miny, float maxy) {
   return a * x + b;
 }
 
-vec3 rotateX(vec3 p, float a) {
-  float r = a*pi/180.0;
-  mat3 rx = mat3(1,   0,      0,
-                 0, cos(r), sin(r),
-                 0, -sin(r), cos(r));
-
-  return rx*p;
-}
-
 float smin(float a, float b, float k) {
   float h = clamp(0.5+0.5*(b-a)/k, 0.0, 1.0);
   return mix(b, a, h) - k*h*(1.0-h);
 }
 
+// distance fields
 float plane(vec3 p, vec4 n) {
   return dot(p, n.xyz) + n.w;
 }
@@ -43,6 +35,7 @@ float cylinder(vec3 p, vec2 h) {
     return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
 }
 
+// operations on distance fields
 vec4 unionz(vec4 a, vec4 b) {
   float d = min(a.x, b.x);
   return vec4(d, d == a.x ? a.yzw : b.yzw);
@@ -76,6 +69,15 @@ void mirrorRight(inout vec2 p, vec2 o) {
   if(p.y > p.x) p.xy = p.yx;
 }
 
+void rotateX(inout vec3 p, float a) {
+  float r = a*pi/180.0;
+  mat3 rx = mat3(1,   0,      0,
+                 0, cos(r), sin(r),
+                 0, -sin(r), cos(r));
+
+  p = rx*p;
+}
+
 vec4 scene(vec3 p) {
   vec3 color = vec3(0.75);
 
@@ -83,14 +85,20 @@ vec4 scene(vec3 p) {
     plane(p, vec4(0, 1, 0, 0)),
     vec3(0.5)*mod(floor(p.z) + floor(p.x), 2.0));
 
+
   p.y -= 1.45;
-  mirrorRight(p.xz, vec2(2, 2));
-  mirrorRight(p.xz, vec2(2, 3));
+  mirrorLeft(p.xz, vec2(5.0, 5.0));
+
+  vec4 sphereDI = vec4(sphere(p + vec3(0, 0, 0), 0.6), vec3(1, 0, 0));
+
+  mirrorRight(p.xz, vec2(4, 5));
   mirrorRight(p.z, 0.8);
   vec4 wall = vec4(box2(p.yz, vec2(1.4, 0.05)), color);
 
   p.yz -= vec2(1.8, 0.45);
-  vec4 roof = vec4(box2(rotateX(p, 45.0).yz, vec2(0.05, 0.7)), color);
+  rotateX(p, 45.0);
+  vec4 roof = vec4(box2(p.yz, vec2(0.05, 0.7)), color);
+  rotateX(p, -45.0);
   p.yz += vec2(1.8, 0.45);
 
   vec4 building = unionz(roof, wall);
@@ -104,6 +112,7 @@ vec4 scene(vec3 p) {
 
   vec4 windows = unionz(boxDI, cylinderDI);
   building = compliment(windows, building);
+  building = unionz(building, sphereDI);
 
   return unionz(planeDI, building);
 }
@@ -197,12 +206,12 @@ void tryImage(out vec4 fragColor, in vec2 fragCoord) {
   if(render.y > -1.0) {
     vec3 pos = ro + render.x*rd;
     vec3 normal = getNormal(pos);
-    vec4 shading = getShading(pos, normal, vec3(0, 5.0, 0));
+    vec4 shading = getShading(pos, normal, vec3(-10, 5.0, 0));
     float ao = ambientOcclusion(pos, normal);
 
     fragColor = vec4(pow(render.yzw, vec3(0.474)), 1)*shading*(1.0 - ao);
   } else {
-    fragColor = vec4(pow(vec3(0.0, fragCoord.x/res.x, fragCoord.y/res.y), vec3(0.34343)), 1);
+    fragColor = vec4(vec3(0.25), 1.0);
   }
 }
 
