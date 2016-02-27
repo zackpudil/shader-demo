@@ -12,6 +12,7 @@ export function radians(degrees) {
 export function clamp(out, min, max) {
   if(!out.length) out = [out];
   let result = [];
+  
   for(let i = 0; i < out.length; i++)
     result.push(Math.max(Math.min(out[i], max[i]), min[i]));
 

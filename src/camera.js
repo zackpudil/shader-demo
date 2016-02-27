@@ -3,11 +3,11 @@ import { radians, mod } from './util';
 
 export default class Camera {
   constructor(position, angles) {
-    this.position = position || [0, 0, -1];
+    this.position = position;
+    this.angles = angles;
+
     this.forward = vec3.create();
     this.right = vec3.create();
-
-    this.angles = angles;
   }
 
   move(speed) {

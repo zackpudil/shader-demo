@@ -4,12 +4,6 @@ export default class Shader {
     this.program = this.gl.createProgram();
   }
 
-  use() {
-    this.gl.useProgram(this.program);
-
-    return this;
-  }
-
   attach(src, type) {
     let shader = this.gl.createShader(type == "vert" ? this.gl.VERTEX_SHADER : this.gl.FRAGMENT_SHADER);
     this.gl.shaderSource(shader, src);
@@ -27,6 +21,11 @@ export default class Shader {
     this.gl.linkProgram(this.program);
     let info = this.gl.getProgramInfoLog(this.program);
     if(info) throw new Error(info);
+    return this;
+  }
+
+  use() {
+    this.gl.useProgram(this.program);
     return this;
   }
 

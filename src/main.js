@@ -12,8 +12,7 @@ import { radians } from './util';
 
 let shell = createShell();
 
-var w, h;
-var distanceFieldShader, triangleBuffer;
+var shader, screenBuffer;
 var camera;
 
 var mouse = {
@@ -23,30 +22,24 @@ var mouse = {
 shell.on('gl-init', () => {
   let gl = shell.gl;
 
-  w = shell.width;
-  h = shell.height;
+  var vertSrc = glslify("../shaders/main.vert.glsl");
+  var fragSrc = glslify("../shaders/main.frag.glsl");
 
-  gl.enable(gl.DEPTH_TEST);
-  gl.viewport(0, 0, w, h);
-
-  var triangleSrc = glslify("../shaders/main.vert.glsl");
-  var distanceFieldShaderSrc = glslify("../shaders/main.frag.glsl");
-
-  distanceFieldShader = new Shader(gl)
-    .attach(triangleSrc, 'vert')
-    .attach(distanceFieldShaderSrc, 'frag')
+  shader = new Shader(gl)
+    .attach(vertSrc, 'vert')
+    .attach(fragSrc, 'frag')
     .link();
 
-  let triangleData = new Float32Array([
+  let twoTriangles = new Float32Array([
     1, -1, -1, -1, -1, 1,
     -1, 1, 1, 1, 1, -1
   ]);
 
-  triangleBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, triangleData, gl.STATIC_DRAW);
+  screenBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, screenBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, twoTriangles, gl.STATIC_DRAW);
 
-  let loc = gl.getAttribLocation(distanceFieldShader.program, "position");
+  let loc = gl.getAttribLocation(shader.program, "position");
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
@@ -92,9 +85,9 @@ shell.on('gl-render', (t) => {
   if(pressed("<space>")) camera.up(speed);
   if(pressed("<shift>")) camera.up(-speed);
 
-  distanceFieldShader.use()
+  shader.use()
     .bind("time", { type: 'float', val: globalTime })
-    .bind("resolution", { type: 'vec2', val: [w, h] })
+    .bind("resolution", { type: 'vec2', val: [shell.width, shell.height] })
     .bind("view", { type: 'mat3', val: camera.getViewMatrix() })
     .bind("eye", { type: 'vec3', val: camera.position });
 
