@@ -139,7 +139,7 @@ float getShadow(vec3 p0, vec3 p1, float k) {
   float maxt = length(p1 - p0);
   float f = 1.0;
 
-  for(int i = 0; i < 200; i++) {
+  for(int i = 0; i < 64; i++) {
     float d = scene(p0 + rd*t).x;
 
     if(d < 0.0002) return 0.0;
@@ -183,7 +183,7 @@ vec4 raymarch(vec3 rayOrigin, vec3 rayDirection) {
   float t = 0.0;
   vec3 m = vec3(-1.0);
 
-  for(int i = 0; i < 200; i++) {
+  for(int i = 0; i < 64; i++) {
     vec3 p = rayOrigin + rayDirection*t;
     vec4 s = scene(p);
     if(s.x < 0.0002) break;
