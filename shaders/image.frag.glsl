@@ -79,7 +79,7 @@ vec4 scene(vec3 p) {
     vec3(1.0)*mod(floor(p.z) + floor(p.x), 2.0));
 
   p.y -= 1.45;
-  // mirrorLeft(p.xz, vec2(5, 5));
+  mirrorLeft(p.xz, vec2(5, 5));
   vec4 sphereDI = vec4(sphere(p + vec3(0, 0, 0), 0.6), vec3(1, 0, 0));
   mirrorRight(p.xz, vec2(5, 5));
   mirrorRight(p.z, 1.5);
@@ -156,12 +156,12 @@ float ambientOcclusion(vec3 p, vec3 n) {
 
 vec3 getShading(vec3 p, vec3 n, vec3 l) {
   float ints = 0.0;
-  float shadow = getShadow(p, l, 1.5);
+  float shadow = getShadow(p, l, 3.5);
   float ao = ambientOcclusion(p, n);
 
   if(shadow > 0.0) {
     vec3 lightDir = normalize(l - p);
-    ints = clamp(dot(n, lightDir), 0.0, 1.0);
+    ints = clamp(dot(n, lightDir), 0.0, 1.0)*shadow;
   }
 
   return vec3(1.0)*ints + vec3(0.4)*(1.0 - ints)*(1.0 - ao);
@@ -198,7 +198,7 @@ void tryImage(out vec4 fragColor, in vec2 fragCoord) {
     vec3 pos = ro + render.x*rd;
     vec3 normal = getNormal(pos);
     vec3 shading =
-      getShading(pos, normal, vec3(0, 15, 0));
+      getShading(pos, normal, vec3(0, 10, 0));
 
     fragColor = vec4(pow(render.yzw*shading, vec3(0.474)), 1);
   } else {
