@@ -25,9 +25,13 @@ float cylinder(vec3 p, vec2 h) {
 }
 
 // operations on distance fields
-vec4 unionz(vec4 a, vec4 b) {
+vec4 unionRightAngle(vec4 a, vec4 b) {
   float d = min(a.x, b.x);
   return vec4(d, d == a.x ? a.yzw : b.yzw);
+}
+
+vec4 unionChamfer(vec4 a, vec4 b, float r) {
+  return min(min(a, b), (a - vec4(r) + b)*sqrt(0.5));
 }
 
 vec4 compliment(vec4 a, vec4 b) {
@@ -80,18 +84,26 @@ vec4 scene(vec3 p) {
 
   p.y -= 1.45;
   mirrorLeft(p.xz, vec2(5, 5));
-  vec4 sphereDI = vec4(sphere(p + vec3(0, 0, 0), 0.6), vec3(1, 0, 0));
+  vec4 sphereDI = vec4(sphere(p + vec3(0, -1.0, 0), 0.6), vec3(1, 0, 0));
+  vec3 m = p;
+  mirrorRight(m.xz, vec2(0.15, 0.15));
+  vec4 column = vec4(cylinder(m + vec3(0, 0.62, 0), vec2(0.2, 0.9)), color);
+  m = p;
+  m.y += 0.55;
+  mirrorLeft(m.y, 0.8);
+  vec4 platform = vec4(box(m, vec3(0.7, 0.1, 0.7)), color);
+
+  vec4 pillar = unionChamfer(platform, column, 0.1);
+  pillar = unionRightAngle(sphereDI, pillar);
   mirrorRight(p.xz, vec2(5, 5));
   mirrorRight(p.z, 1.5);
   vec4 wall = vec4(box2(p.yz, vec2(1.4, 0.05)), color);
 
-  p.yz -= vec2(2.3, 1.05);
-  rotateX(p, 45.0);
-  vec4 roof = vec4(box2(p.yz, vec2(0.05, 1.7)), color);
-  rotateX(p, -45.0);
-  p.yz += vec2(2.3, 1.05);
-
-  vec4 building = unionz(roof, wall);
+  m = p;
+  m.yz -= vec2(2.3, 1.05);
+  rotateX(m, 45.0);
+  vec4 roof = vec4(box2(m.yz, vec2(0.05, 1.7)), color);
+  vec4 building = unionRightAngle(roof, wall);
 
   rep(p.x, 1.5);
   mirrorLeft(p.x, 0.55);
@@ -101,11 +113,11 @@ vec4 scene(vec3 p) {
   p.y -= 0.7;
   vec4 cylinderDI = vec4(cylinder(p.xzy, vec2(0.6, 0.1)), color);
 
-  vec4 windows = unionz(boxDI, cylinderDI);
+  vec4 windows = unionRightAngle(boxDI, cylinderDI);
   building = compliment(windows, building);
-  building = unionz(building, sphereDI);
+  building = unionRightAngle(building, pillar);
 
-  vec4 scene = unionz(planeDI, building);
+  vec4 scene = unionRightAngle(planeDI, building);
 
   return scene;
 }
@@ -156,7 +168,7 @@ float ambientOcclusion(vec3 p, vec3 n) {
 
 vec3 getShading(vec3 p, vec3 n, vec3 l) {
   float ints = 0.0;
-  float shadow = getShadow(p, l, 3.5);
+  float shadow = getShadow(p, l, 15.5);
   float ao = ambientOcclusion(p, n);
 
   if(shadow > 0.0) {
