@@ -89,8 +89,8 @@ vec4 scene(vec3 p) {
   mirrorRight(m.xz, vec2(0.15, 0.15));
   vec4 column = vec4(cylinder(m + vec3(0, 0.62, 0), vec2(0.2, 0.9)), color);
   m = p;
-  m.y += 0.55;
-  mirrorLeft(m.y, 0.8);
+  m.y += 0.53;
+  mirrorLeft(m.y, 0.82);
   vec4 platform = vec4(box(m, vec3(0.7, 0.1, 0.7)), color);
 
   vec4 pillar = unionChamfer(platform, column, 0.1);
