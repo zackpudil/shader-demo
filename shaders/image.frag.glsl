@@ -147,7 +147,7 @@ vec3 buildingMaterial(vec3 pos, vec3 n) {
   vec2 uv = abs(n.z) > abs(n.y) ? t.xy : t.zy;
   float r = 0.0;
 
-	uv.x = mod(uv.x + 0.55, 1.17) - 0.545;
+	uv.x = mod(uv.x + 0.55, 1.07) - 0.545;
 	uv.y = mod(uv.y + 0.55, 1.17) - 0.55;
 
 	r = box2d(uv - vec2(0.0, 0.5), vec2(0.2, 0.1));
@@ -166,7 +166,7 @@ vec3 buildingMaterial(vec3 pos, vec3 n) {
 	r = min(r, box2d(uv - vec2(0.46, -0.51), vec2(0.15, 0.15)));
 
 	vec3 col = vec3(0.25);
-	if(r < 0.0) col = vec3(0.35, 0.25, 0.12)*brickMaterial(vec3(uv, 31.0));
+	if(r < 0.0) col = vec3(0.35, 0.25, 0.12)*brickMaterial(pos);
   return col;
 }
 
@@ -219,10 +219,10 @@ vec2 scene(vec3 p) {
   pillar = unionRightAngle(sphereDI, pillar);
   mirrorRight(p.xz, vec2(5, 5));
   mirrorRight(p.z, 1.5);
-  vec2 wall = vec2(box2(p.yz, vec2(1.2, 0.05)), 3.0);
+  vec2 wall = vec2(box2(p.yz, vec2(1.5, 0.07)), 3.0);
 
   m = p;
-  m.yz -= vec2(2.3, 1.05);
+  m.yz -= vec2(2.7, 1.05);
   rotateX(m, 45.0);
   vec2 roof = vec2(box2(m.yz, vec2(0.05, 1.7)), 4.0);
   vec2 building = unionRightAngle(roof, wall);
