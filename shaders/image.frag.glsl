@@ -114,9 +114,10 @@ vec3 sphereMaterial(vec3 p) {
   float a = atan(p.x,p.z);
   float r = length(p.xz);
   float f = smoothstep( 0.1, 1.0, fbm(p) );
+  float t = mod(time*0.2, 4.0*pi);
   sphereColor = mix( sphereColor, vec3(0.0,0.0,1.0), f );
-  f = smoothstep( 0.0, 1.0, fbm(p*4.0) );
-  sphereColor *= 0.8+0.2*f;
+  f = smoothstep( 0.0, 1.0, fbm(p + t) );
+  sphereColor *= f;
 
   f = fbm( vec3(a*7.0 + p.z,3.0*p.y,p.x)*2.0);
   f = smoothstep( 0.2,1.0,f);
@@ -126,18 +127,71 @@ vec3 sphereMaterial(vec3 p) {
   return sphereColor;
 }
 
-vec3 buildingMaterial(vec3 p) {
-  vec3 wallColor = vec3(0.25);
+vec3 brickMaterial(vec3 p) {
+  vec3 wallColor = vec3(0.75);
   float f = fbm( 4.0*p*vec3(1.0,9.0,0.5) );
   wallColor = mix( wallColor, vec3(0.2,0.2,0.2)*1.7, f );
   f = fbm( 2.0*p);
   wallColor *= 0.7+0.3*f;
 
-  f = smoothstep(0.0, 1.0, fbm(p*48.0));
-  f = smoothstep(0.7, 0.9, f);
-  wallColor = mix(wallColor, vec3(0.2), f*0.75);
-
   return wallColor;
+}
+
+float box2d(vec2 p, vec2 b) {
+  vec2 d = abs(p) - b;
+  return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
+}
+
+vec3 buildingMaterial(vec3 pos, vec3 n) {
+  vec3 t = (n - pos);
+  vec2 uv = abs(n.z) > abs(n.y) ? t.xy : t.zy;
+  float r = 0.0;
+
+	uv.x = mod(uv.x + 0.55, 1.17) - 0.545;
+	uv.y = mod(uv.y + 0.55, 1.17) - 0.55;
+
+	r = box2d(uv - vec2(0.0, 0.5), vec2(0.2, 0.1));
+	r = min(r, box2d(uv - vec2(0.0, 0.23), vec2(0.15, 0.15)));
+	r = min(r, box2d(uv - vec2(0.0, -0.14), vec2(0.42, 0.2)));
+	r = min(r, box2d(uv - vec2(0.0, -0.51), vec2(0.3, 0.15)));
+
+	r = min(r, box2d(uv - vec2(-0.41, 0.5), vec2(0.2, 0.1)));
+	r = min(r, box2d(uv - vec2(-0.385, 0.23), vec2(0.225, 0.15)));
+	r = min(r, box2d(uv - vec2(-0.52, -0.14), vec2(0.09, 0.2)));
+	r = min(r, box2d(uv - vec2(-0.46, -0.51), vec2(0.15, 0.15)));
+
+	r = min(r, box2d(uv - vec2(0.41, 0.5), vec2(0.2, 0.1)));
+	r = min(r, box2d(uv - vec2(0.385, 0.23), vec2(0.225, 0.15)));
+	r = min(r, box2d(uv - vec2(0.52, -0.14), vec2(0.09, 0.2)));
+	r = min(r, box2d(uv - vec2(0.46, -0.51), vec2(0.15, 0.15)));
+
+	vec3 col = vec3(0.25);
+	if(r < 0.0) col = vec3(0.35, 0.25, 0.12)*brickMaterial(vec3(uv, 31.0));
+  return col;
+}
+
+vec3 roofMaterial(vec3 pos, vec3 n) {
+  vec3 t = (n - pos);
+  vec2 uv = abs(n.z) > abs(n.y) ? t.xy : t.zy;
+
+  rep(uv.x, 0.23);
+  rep(uv.y, 0.23);
+
+  float r = box2d(uv, vec2(0.2, 0.2));
+
+  vec3 col = vec3(0.2, 0.2, 0.2);
+  if(r < 0.0) col = vec3(1, 0.2, 0.2)*brickMaterial(vec3(0.0, uv));
+
+  return col;
+}
+
+vec3 pillarMaterial(vec3 pos) {
+  vec3 col = brickMaterial(pos);
+  float f = smoothstep(0.0, 1.0, fbm(pos*48.0));
+  f = smoothstep(0.7, 0.9, f);
+
+  col = mix(col, vec3(0.2), f*0.75);
+  return col;
 }
 
 vec3 floorMaterial(vec3 p) {
@@ -165,12 +219,12 @@ vec2 scene(vec3 p) {
   pillar = unionRightAngle(sphereDI, pillar);
   mirrorRight(p.xz, vec2(5, 5));
   mirrorRight(p.z, 1.5);
-  vec2 wall = vec2(box2(p.yz, vec2(1.4, 0.05)), 2.0);
+  vec2 wall = vec2(box2(p.yz, vec2(1.2, 0.05)), 3.0);
 
   m = p;
   m.yz -= vec2(2.3, 1.05);
   rotateX(m, 45.0);
-  vec2 roof = vec2(box2(m.yz, vec2(0.05, 1.7)), 2.0);
+  vec2 roof = vec2(box2(m.yz, vec2(0.05, 1.7)), 4.0);
   vec2 building = unionRightAngle(roof, wall);
 
   rep(p.x, 1.5);
@@ -198,9 +252,9 @@ vec3 getNormal(vec3 p) {
   vec3 z = vec3(0, 0, h);
 
   return normalize(vec3(
-    scene(p + x).x - scene(p - x).x,
-    scene(p + y).x - scene(p - y).x,
-    scene(p + z).x - scene(p - z).x));
+    (scene(p + x).x - scene(p - x).x)/h,
+    (scene(p + y).x - scene(p - y).x)/h,
+    (scene(p + z).x - scene(p - z).x)/h));
 }
 
 float getShadow(vec3 p0, vec3 p1, float k) {
@@ -269,8 +323,6 @@ void tryImage(out vec4 fragColor, in vec2 fragCoord) {
 
   vec3 ro = eye;
   vec3 rd = view*normalize(vec3(uv, 1.97));
-  int i;
-  float t;
 
   vec2 render = raymarch(ro, rd);
 
@@ -285,7 +337,11 @@ void tryImage(out vec4 fragColor, in vec2 fragCoord) {
     else if(render.y == 1.0)
       col = sphereMaterial(pos);
     else if(render.y == 2.0)
-      col = buildingMaterial(pos);
+      col = pillarMaterial(pos);
+    else if(render.y == 3.0)
+      col = buildingMaterial(pos, normal);
+    else if(render.y == 4.0)
+      col = roofMaterial(pos, normal);
 
     fragColor = vec4(pow(col*shading, vec3(0.474)), 1);
   } else {
